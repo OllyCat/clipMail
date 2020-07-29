@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
+	"runtime"
 
 	"github.com/OllyCat/clipMail/clip"
 	"github.com/gen2brain/dlgs"
+	"github.com/sudot/trayhost"
 )
 
 func main() {
@@ -17,32 +17,45 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		writeConf()
+		err = writeConf()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	scanner := bufio.NewScanner(os.Stdin)
+	runtime.LockOSThread()
 
-	for {
-		ok := scanner.Scan()
+	trayhost.Debug = true
+	trayhost.Initialize("SendClip", func() {
+		go getAndSend()
+	})
 
-		if !ok {
-			break
-		}
+	trayhost.SetIconData(iconData)
+	trayhost.SetMenu(trayhost.MenuItems{
+		trayhost.NewMenuItem("Send clipboard", getAndSend),
+		trayhost.NewMenuItemDivided(),
+		trayhost.NewMenuItem("Exit", trayhost.Exit),
+	})
 
-		buff, err := clip.GetClipboard()
-		if err != nil {
-			dlgs.Error("Error", err.Error())
-			//log.Fatal(err)
-			continue
-		}
+	trayhost.EnterLoop()
+}
 
-		err = sendMail(buff)
-		if err != nil {
-			dlgs.Error("Error", err.Error())
-			//log.Fatal(err)
-			continue
-		}
-		fmt.Println("Mail OK.")
-		dlgs.Info("Mail", "Email sent successfully")
+func getAndSend() {
+	trayhost.SetIconData(iconSend)
+	defer trayhost.SetIconData(iconData)
+	buff, err := clip.GetClipboard()
+	if err != nil {
+		dlgs.Error("Error", err.Error())
+		//log.Fatal(err)
+		return
 	}
+
+	err = sendMail(buff)
+	if err != nil {
+		dlgs.Error("Error", err.Error())
+		//log.Fatal(err)
+		return
+	}
+	fmt.Println("Mail OK.")
+	dlgs.Info("Mail", "Email sent successfully")
 }
