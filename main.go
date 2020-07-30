@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/OllyCat/clipMail/clip"
 	"github.com/gen2brain/dlgs"
@@ -11,6 +12,28 @@ import (
 )
 
 func main() {
+	runtime.LockOSThread()
+
+	trayhost.Debug = false
+	trayhost.Initialize("SendClip", func() {
+		go getAndSend()
+	})
+
+	trayhost.SetMenu(trayhost.MenuItems{
+		trayhost.NewMenuItem("Send clipboard", getAndSend),
+		trayhost.NewMenuItemDivided(),
+		trayhost.NewMenuItem("Exit", trayhost.Exit),
+	})
+
+	go func() {
+		time.Sleep(3 * time.Second)
+		trayhost.SetIconData(iconData)
+	}()
+
+	trayhost.EnterLoop()
+}
+
+func init() {
 	err := readConf()
 	if err != nil {
 		err = createConf()
@@ -22,22 +45,6 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-
-	runtime.LockOSThread()
-
-	trayhost.Debug = true
-	trayhost.Initialize("SendClip", func() {
-		go getAndSend()
-	})
-
-	trayhost.SetIconData(iconData)
-	trayhost.SetMenu(trayhost.MenuItems{
-		trayhost.NewMenuItem("Send clipboard", getAndSend),
-		trayhost.NewMenuItemDivided(),
-		trayhost.NewMenuItem("Exit", trayhost.Exit),
-	})
-
-	trayhost.EnterLoop()
 }
 
 func getAndSend() {

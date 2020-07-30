@@ -1,5 +1,6 @@
 package clip
 
 func GetClipboard() ([]byte, error) {
-	return getClipboard()
+	scrn, err := getClipboard()
+	return scrn, err
 }

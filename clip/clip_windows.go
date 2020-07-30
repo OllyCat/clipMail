@@ -13,6 +13,7 @@ import (
 
 	"github.com/gen2brain/dlgs"
 	"github.com/jsummers/gobmp"
+	"github.com/kbinani/screenshot"
 	"github.com/pkg/errors"
 )
 
@@ -96,7 +97,17 @@ func getClipboard() ([]byte, error) {
 	r, _, err := isClipboardFormatAvailable.Call(cfDib)
 	if r == 0 {
 		log.Println("not Dib format: ", err)
-		dlgs.Error("Error", "Not DIB format")
+		//dlgs.Error("Error", "Not DIB format")
+		b := screenshot.GetDisplayBounds(0)
+		img, err := screenshot.CaptureRect(b)
+		if err != nil {
+			return nil, err
+		}
+		buffer := new(bytes.Buffer)
+		err = png.Encode(buffer, img)
+		if err == nil {
+			return buffer.Bytes(), nil
+		}
 		return nil, err
 	}
 
