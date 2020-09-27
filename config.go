@@ -19,7 +19,7 @@ type Configuration struct {
 
 var conf = Configuration{}
 
-func readConf() error {
+func (c *Configuration) Load() error {
 	f, err := os.Open("clipMail.json")
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func readConf() error {
 	return err
 }
 
-func writeConf() error {
+func (c *Configuration) Save() error {
 	f, err := os.OpenFile("clipMail.json", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil {
 		log.Fatal("Open for write config error: ", err)
@@ -58,7 +58,7 @@ func writeConf() error {
 	return nil
 }
 
-func createConf() error {
+func (c *Configuration) Default() error {
 	_, err := dlgs.Warning("Config creation", "Config dos't exist.")
 	if err != nil {
 		return err

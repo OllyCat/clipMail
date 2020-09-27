@@ -34,13 +34,13 @@ func main() {
 }
 
 func init() {
-	err := readConf()
+	err := conf.Load()
 	if err != nil {
-		err = createConf()
+		err = conf.Default()
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = writeConf()
+		err = conf.Save()
 		if err != nil {
 			log.Fatal(err)
 		}
