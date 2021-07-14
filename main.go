@@ -3,34 +3,31 @@ package main
 import (
 	"fmt"
 	"log"
-	"runtime"
-	"time"
 
 	"github.com/OllyCat/clipMail/clip"
 	"github.com/gen2brain/dlgs"
-	"github.com/sudot/trayhost"
+	"github.com/getlantern/systray"
 )
 
 func main() {
-	runtime.LockOSThread()
+	systray.Run(onReady, onExit)
+}
 
-	trayhost.Debug = false
-	trayhost.Initialize("SendClip", func() {
-		go getAndSend()
-	})
-
-	trayhost.SetMenu(trayhost.MenuItems{
-		trayhost.NewMenuItem("Send clipboard", getAndSend),
-		trayhost.NewMenuItemDivided(),
-		trayhost.NewMenuItem("Exit", trayhost.Exit),
-	})
-
+func onReady() {
+	iconData := getIcons(0)
+	systray.SetIcon(iconData)
+	systray.SetTitle("SendClip")
+	mSend := systray.AddMenuItem("Send clipboard", "Exit")
+	go getAndSend(mSend)
+	systray.AddSeparator()
+	mExit := systray.AddMenuItem("Exit", "Exit")
 	go func() {
-		time.Sleep(3 * time.Second)
-		trayhost.SetIconData(iconData)
+		<-mExit.ClickedCh
+		systray.Quit()
 	}()
+}
 
-	trayhost.EnterLoop()
+func onExit() {
 }
 
 func init() {
@@ -47,22 +44,26 @@ func init() {
 	}
 }
 
-func getAndSend() {
-	trayhost.SetIconData(iconSend)
-	defer trayhost.SetIconData(iconData)
-	buff, err := clip.GetClipboard()
-	if err != nil {
-		dlgs.Error("Error", err.Error())
-		//log.Fatal(err)
-		return
-	}
+func getAndSend(mSend *systray.MenuItem) {
+	iconData := getIcons(0)
+	iconSend := getIcons(1)
+LOOP:
+	for {
+		systray.SetIcon(iconData)
+		<-mSend.ClickedCh
+		systray.SetIcon(iconSend)
+		buff, err := clip.GetClipboard()
+		if err != nil {
+			dlgs.Error("Error", err.Error())
+			continue LOOP
+		}
 
-	err = sendMail(buff)
-	if err != nil {
-		dlgs.Error("Error", err.Error())
-		//log.Fatal(err)
-		return
+		err = sendMail(buff)
+		if err != nil {
+			dlgs.Error("Error", err.Error())
+			continue LOOP
+		}
+		fmt.Println("Mail OK.")
+		dlgs.Info("Mail", "Email sent successfully")
 	}
-	fmt.Println("Mail OK.")
-	dlgs.Info("Mail", "Email sent successfully")
 }

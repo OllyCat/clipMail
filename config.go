@@ -1,3 +1,4 @@
+// Package main
 package main
 
 import (
@@ -10,16 +11,16 @@ import (
 	"github.com/gen2brain/dlgs"
 )
 
-type Configuration struct {
+type configuration struct {
 	Server string `json:"server"`
 	Port   int    `json:"port"`
 	User   string `json:"user"`
 	Pass   string `json:"-"`
 }
 
-var conf = Configuration{}
+var conf = configuration{}
 
-func (c *Configuration) Load() error {
+func (c *configuration) Load() error {
 	f, err := os.Open("clipMail.json")
 	if err != nil {
 		return err
@@ -39,7 +40,7 @@ func (c *Configuration) Load() error {
 	return err
 }
 
-func (c *Configuration) Save() error {
+func (c *configuration) Save() error {
 	f, err := os.OpenFile("clipMail.json", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil {
 		log.Fatal("Open for write config error: ", err)
@@ -58,8 +59,8 @@ func (c *Configuration) Save() error {
 	return nil
 }
 
-func (c *Configuration) Default() error {
-	_, err := dlgs.Warning("Config creation", "Config dos't exist.")
+func (c *configuration) Default() error {
+	_, err := dlgs.Warning("Config creation", "Config doesn't exist.")
 	if err != nil {
 		return err
 	}

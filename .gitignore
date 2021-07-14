@@ -2,11 +2,14 @@ build.sh
 build64.sh
 
 # Binaries for programs and plugins
+clipMail
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+go.mod
+go.sum
 
 # Test binary, built with 
 *.test
